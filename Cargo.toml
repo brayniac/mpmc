@@ -1,0 +1,8 @@
+[package]
+name = "mpmc"
+version = "0.1.0"
+authors = ["Brian Martin <brayniac@gmail.com>"]
+
+license-file = "LICENSE"
+
+description = "copy-pasted from old rust stdlib"
