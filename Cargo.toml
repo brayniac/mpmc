@@ -1,7 +1,7 @@
 [package]
 name = "mpmc"
-version = "0.1.1"
-authors = ["Brian Martin <brayniac@gmail.com>"]
+version = "0.1.2"
+authors = ["Dmitry Vyukov", "Brian Martin <brayniac@gmail.com>"]
 
 license-file = "LICENSE"
 
