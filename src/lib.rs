@@ -79,13 +79,13 @@ impl<T: Send> State<T> {
             capacity
         };
         let buffer = (0..capacity)
-                         .map(|i| {
-                             UnsafeCell::new(Node {
-                                 sequence: AtomicUsize::new(i),
-                                 value: None,
-                             })
-                         })
-                         .collect::<Vec<_>>();
+            .map(|i| {
+                UnsafeCell::new(Node {
+                    sequence: AtomicUsize::new(i),
+                    value: None,
+                })
+            })
+            .collect::<Vec<_>>();
         State {
             pad0: [0; 64],
             buffer: buffer,
