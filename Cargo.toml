@@ -1,6 +1,6 @@
 [package]
 name = "mpmc"
-version = "0.1.5"
+version = "0.1.6-pre"
 authors = ["Dmitry Vyukov", "Brian Martin <brayniac@gmail.com>"]
 
 homepage = "https://github.com/brayniac/mpmc"
