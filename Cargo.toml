@@ -7,6 +7,7 @@ homepage = "https://github.com/brayniac/mpmc"
 documentation = "https://docs.rs/mpmc"
 repository = "https://github.com/brayniac/mpmc"
 
+readme = "README.md"
 license-file = "LICENSE"
 
 description = "copy-pasted from old rust stdlib"
