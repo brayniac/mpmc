@@ -27,18 +27,22 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Dmitry Vyukov.
 //
-
+#![no_std]
+#![feature(alloc)]
 #![allow(missing_docs, dead_code)]
 
 // http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 
 // This queue is copy pasted from old rust stdlib.
 
-use std::sync::Arc;
-use std::cell::UnsafeCell;
+extern crate alloc;
 
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering::{Relaxed, Release, Acquire};
+use alloc::arc::Arc;
+use alloc::Vec;
+use core::cell::UnsafeCell;
+
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::{Relaxed, Release, Acquire};
 
 struct Node<T> {
     sequence: AtomicUsize,
@@ -173,7 +177,7 @@ impl<T: Send> Clone for Queue<T> {
     }
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use std::thread;
     use std::sync::mpsc::channel;
@@ -230,3 +234,4 @@ mod tests {
         }
     }
 }
+ */
