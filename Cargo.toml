@@ -15,3 +15,10 @@ description = "copy-pasted from old rust stdlib"
 keywords = ["mpmc", "queue"]
 
 travis-ci = { repository = "brayniac/mpmc", branch = "master" }
+
+[dependencies.spawn]
+path = "../../kernel/spawn"
+
+[dependencies.log]
+default-features = false
+version = "0.3.7"

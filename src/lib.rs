@@ -34,8 +34,9 @@
 // http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 
 // This queue is copy pasted from old rust stdlib.
-
+#[macro_use] extern crate log;
 extern crate alloc;
+extern crate spawn;
 
 use alloc::arc::Arc;
 use alloc::Vec;
@@ -43,6 +44,8 @@ use core::cell::UnsafeCell;
 
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering::{Relaxed, Release, Acquire};
+
+pub mod test;
 
 struct Node<T> {
     sequence: AtomicUsize,
