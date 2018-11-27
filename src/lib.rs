@@ -38,8 +38,8 @@
 extern crate alloc;
 extern crate spawn;
 
-use alloc::arc::Arc;
-use alloc::Vec;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
 use core::cell::UnsafeCell;
 
 use core::sync::atomic::AtomicUsize;

@@ -1,5 +1,5 @@
 use super::*;
-use alloc::String;
+use alloc::string::String;
 use spawn::KernelTaskBuilder;
 
 // static mut TEST_QUEUE: Queue::<u64> = Queue::with_capacity(200);
