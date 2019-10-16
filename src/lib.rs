@@ -28,7 +28,6 @@
 // policies, either expressed or implied, of Dmitry Vyukov.
 //
 #![no_std]
-#![feature(alloc)]
 #![allow(missing_docs, dead_code)]
 
 // http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
