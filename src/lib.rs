@@ -45,10 +45,11 @@ use alloc::vec::Vec;
 use core::cell::UnsafeCell;
 
 use core::sync::atomic::AtomicUsize;
-use core::sync::atomic::Ordering::{Relaxed, Release, Acquire};
+use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 
 #[cfg(test)]
-#[macro_use] extern crate std;
+#[macro_use]
+extern crate std;
 
 struct Node<T> {
     sequence: AtomicUsize,
@@ -117,12 +118,15 @@ impl<T: Send> State<T> {
             let diff: isize = seq as isize - pos as isize;
 
             if diff == 0 {
-                match self.enqueue_pos.compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed) {
+                match self
+                    .enqueue_pos
+                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                {
                     Ok(_old_pos) => unsafe {
                         (*node.get()).value = Some(value);
                         (*node.get()).sequence.store(pos + 1, Release);
                         break;
-                    }
+                    },
                     Err(changed_old_pos) => pos = changed_old_pos,
                 }
             } else if diff < 0 {
@@ -142,12 +146,15 @@ impl<T: Send> State<T> {
             let seq = unsafe { (*node.get()).sequence.load(Acquire) };
             let diff: isize = seq as isize - (pos + 1) as isize;
             if diff == 0 {
-                match self.dequeue_pos.compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed) {
+                match self
+                    .dequeue_pos
+                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                {
                     Ok(_old_pos) => unsafe {
                         let value = (*node.get()).value.take();
                         (*node.get()).sequence.store(pos + mask + 1, Release);
                         return value;
-                    }
+                    },
                     Err(changed_old_pos) => pos = changed_old_pos,
                 }
             } else if diff < 0 {
@@ -161,7 +168,9 @@ impl<T: Send> State<T> {
 
 impl<T: Send> Queue<T> {
     pub fn with_capacity(capacity: usize) -> Queue<T> {
-        Queue { state: Arc::new(State::with_capacity(capacity)) }
+        Queue {
+            state: Arc::new(State::with_capacity(capacity)),
+        }
     }
 
     pub fn push(&self, value: T) -> Result<(), T> {
@@ -175,15 +184,17 @@ impl<T: Send> Queue<T> {
 
 impl<T: Send> Clone for Queue<T> {
     fn clone(&self) -> Queue<T> {
-        Queue { state: self.state.clone() }
+        Queue {
+            state: self.state.clone(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::sync::mpsc::channel;
     use super::Queue;
+    use std::sync::mpsc::channel;
+    use std::thread;
 
     #[test]
     fn test() {
