@@ -10,7 +10,7 @@ mpmc is a multi-produce multi-consumer queue which has been copied from the old 
 [release-badge]: https://img.shields.io/crates/v/mpmc.svg
 [license-badge]: https://img.shields.io/crates/l/mpmc.svg
 [conduct]: https://brayniac.github.io/conduct
-[travis]: https://travis-ci.org/brayniac/mpmc
+[ci]: https://github.com/brayniac/mpmc/actions/workflows/cargo.yml
 [crate]: https://crates.io/crates/mpmc
 [Cargo]: https://github.com/rust-lang/cargo
 
