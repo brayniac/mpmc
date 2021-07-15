@@ -40,12 +40,9 @@
 // This queue is copy pasted from old rust stdlib.
 extern crate alloc;
 
-use alloc::sync::Arc;
-use alloc::vec::Vec;
-use core::cell::UnsafeCell;
+use alloc::{sync::Arc, vec::Vec};
+use core::{cell::UnsafeCell, sync::atomic::{AtomicUsize, Ordering::{Relaxed, Release, Acquire}}};
 
-use core::sync::atomic::AtomicUsize;
-use core::sync::atomic::Ordering::{Relaxed, Release, Acquire};
 
 #[cfg(test)]
 #[macro_use] extern crate std;
