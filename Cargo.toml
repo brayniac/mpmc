@@ -12,6 +12,6 @@ license-file = "LICENSE"
 
 description = "copy-pasted from old rust stdlib"
 
-keywords = ["mpmc", "queue"]
+keywords = ["mpmc", "queue", "no_std"]
 
 travis-ci = { repository = "brayniac/mpmc", branch = "master" }

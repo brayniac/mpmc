@@ -1,3 +1,8 @@
+//! A multi-producer multi-consumer (MPMC) queue.
+//!
+//! This code was taken from an old version of the Rust standard library
+//! and modified to work with newer Rust compiler versions.
+
 // Copyright (c) 2010-2011 Dmitry Vyukov. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -27,18 +32,24 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Dmitry Vyukov.
 //
-
-#![allow(missing_docs, dead_code)]
+#![no_std]
+#![allow(missing_docs)]
 
 // http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
 
 // This queue is copy pasted from old rust stdlib.
+extern crate alloc;
 
-use std::sync::Arc;
-use std::cell::UnsafeCell;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
+use core::cell::UnsafeCell;
 
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering::{Relaxed, Release, Acquire};
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
+
+#[cfg(test)]
+#[macro_use]
+extern crate std;
 
 struct Node<T> {
     sequence: AtomicUsize,
@@ -49,14 +60,14 @@ unsafe impl<T: Send> Send for Node<T> {}
 unsafe impl<T: Sync> Sync for Node<T> {}
 
 struct State<T> {
-    pad0: [u8; 64],
+    _pad0: [u8; 64],
     buffer: Vec<UnsafeCell<Node<T>>>,
     mask: usize,
-    pad1: [u8; 64],
+    _pad1: [u8; 64],
     enqueue_pos: AtomicUsize,
-    pad2: [u8; 64],
+    _pad2: [u8; 64],
     dequeue_pos: AtomicUsize,
-    pad3: [u8; 64],
+    _pad3: [u8; 64],
 }
 
 unsafe impl<T: Send> Send for State<T> {}
@@ -87,14 +98,14 @@ impl<T: Send> State<T> {
             })
             .collect::<Vec<_>>();
         State {
-            pad0: [0; 64],
+            _pad0: [0; 64],
             buffer: buffer,
             mask: capacity - 1,
-            pad1: [0; 64],
+            _pad1: [0; 64],
             enqueue_pos: AtomicUsize::new(0),
-            pad2: [0; 64],
+            _pad2: [0; 64],
             dequeue_pos: AtomicUsize::new(0),
-            pad3: [0; 64],
+            _pad3: [0; 64],
         }
     }
 
@@ -107,15 +118,16 @@ impl<T: Send> State<T> {
             let diff: isize = seq as isize - pos as isize;
 
             if diff == 0 {
-                let enqueue_pos = self.enqueue_pos.compare_and_swap(pos, pos + 1, Relaxed);
-                if enqueue_pos == pos {
-                    unsafe {
+                match self
+                    .enqueue_pos
+                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                {
+                    Ok(_old_pos) => unsafe {
                         (*node.get()).value = Some(value);
                         (*node.get()).sequence.store(pos + 1, Release);
-                    }
-                    break;
-                } else {
-                    pos = enqueue_pos;
+                        break;
+                    },
+                    Err(changed_old_pos) => pos = changed_old_pos,
                 }
             } else if diff < 0 {
                 return Err(value);
@@ -134,15 +146,16 @@ impl<T: Send> State<T> {
             let seq = unsafe { (*node.get()).sequence.load(Acquire) };
             let diff: isize = seq as isize - (pos + 1) as isize;
             if diff == 0 {
-                let dequeue_pos = self.dequeue_pos.compare_and_swap(pos, pos + 1, Relaxed);
-                if dequeue_pos == pos {
-                    unsafe {
+                match self
+                    .dequeue_pos
+                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                {
+                    Ok(_old_pos) => unsafe {
                         let value = (*node.get()).value.take();
                         (*node.get()).sequence.store(pos + mask + 1, Release);
                         return value;
-                    }
-                } else {
-                    pos = dequeue_pos;
+                    },
+                    Err(changed_old_pos) => pos = changed_old_pos,
                 }
             } else if diff < 0 {
                 return None;
@@ -155,7 +168,9 @@ impl<T: Send> State<T> {
 
 impl<T: Send> Queue<T> {
     pub fn with_capacity(capacity: usize) -> Queue<T> {
-        Queue { state: Arc::new(State::with_capacity(capacity)) }
+        Queue {
+            state: Arc::new(State::with_capacity(capacity)),
+        }
     }
 
     pub fn push(&self, value: T) -> Result<(), T> {
@@ -169,15 +184,17 @@ impl<T: Send> Queue<T> {
 
 impl<T: Send> Clone for Queue<T> {
     fn clone(&self) -> Queue<T> {
-        Queue { state: self.state.clone() }
+        Queue {
+            state: self.state.clone(),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::sync::mpsc::channel;
     use super::Queue;
+    use std::sync::mpsc::channel;
+    use std::thread;
 
     #[test]
     fn test() {
