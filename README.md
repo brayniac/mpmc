@@ -2,15 +2,15 @@
 
 mpmc is a multi-produce multi-consumer queue which has been copied from the old Rust stdlib
 
-[![conduct-badge][]][conduct] [![travis-badge][]][travis] [![downloads-badge][] ![release-badge][]][crate] [![license-badge][]](#license)
+[![conduct-badge][]][conduct] [![ci-badge][]][ci] [![downloads-badge][] ![release-badge][]][crate] [![license-badge][]](#license)
 
 [conduct-badge]: https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg
-[travis-badge]: https://img.shields.io/travis/brayniac/mpmc/master.svg
+[ci-badge]: https://github.com/brayniac/mpmc/actions/workflows/cargo.yml/badge.svg?branch=master
 [downloads-badge]: https://img.shields.io/crates/d/mpmc.svg
 [release-badge]: https://img.shields.io/crates/v/mpmc.svg
 [license-badge]: https://img.shields.io/crates/l/mpmc.svg
 [conduct]: https://brayniac.github.io/conduct
-[travis]: https://travis-ci.org/brayniac/mpmc
+[ci]: https://github.com/brayniac/mpmc/actions/workflows/cargo.yml?query=branch%3Amaster
 [crate]: https://crates.io/crates/mpmc
 [Cargo]: https://github.com/rust-lang/cargo
 
