@@ -43,6 +43,7 @@ extern crate alloc;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::cell::UnsafeCell;
+use core::cmp::Ordering::{Equal, Greater, Less};
 
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
@@ -99,7 +100,7 @@ impl<T: Send> State<T> {
             .collect::<Vec<_>>();
         State {
             _pad0: [0; 64],
-            buffer: buffer,
+            buffer,
             mask: capacity - 1,
             _pad1: [0; 64],
             enqueue_pos: AtomicUsize::new(0),
@@ -115,24 +116,27 @@ impl<T: Send> State<T> {
         loop {
             let node = &self.buffer[pos & mask];
             let seq = unsafe { (*node.get()).sequence.load(Acquire) };
-            let diff: isize = seq as isize - pos as isize;
 
-            if diff == 0 {
-                match self
-                    .enqueue_pos
-                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
-                {
-                    Ok(_old_pos) => unsafe {
-                        (*node.get()).value = Some(value);
-                        (*node.get()).sequence.store(pos + 1, Release);
-                        break;
-                    },
-                    Err(changed_old_pos) => pos = changed_old_pos,
+            match seq.cmp(&pos) {
+                Equal => {
+                    match self
+                        .enqueue_pos
+                        .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                    {
+                        Ok(_old_pos) => unsafe {
+                            (*node.get()).value = Some(value);
+                            (*node.get()).sequence.store(pos + 1, Release);
+                            break;
+                        },
+                        Err(changed_old_pos) => pos = changed_old_pos,
+                    }
                 }
-            } else if diff < 0 {
-                return Err(value);
-            } else {
-                pos = self.enqueue_pos.load(Relaxed);
+                Less => {
+                    return Err(value);
+                }
+                Greater => {
+                    pos = self.enqueue_pos.load(Relaxed);
+                }
             }
         }
         Ok(())
@@ -144,23 +148,26 @@ impl<T: Send> State<T> {
         loop {
             let node = &self.buffer[pos & mask];
             let seq = unsafe { (*node.get()).sequence.load(Acquire) };
-            let diff: isize = seq as isize - (pos + 1) as isize;
-            if diff == 0 {
-                match self
-                    .dequeue_pos
-                    .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
-                {
-                    Ok(_old_pos) => unsafe {
-                        let value = (*node.get()).value.take();
-                        (*node.get()).sequence.store(pos + mask + 1, Release);
-                        return value;
-                    },
-                    Err(changed_old_pos) => pos = changed_old_pos,
+            match seq.cmp(&(pos + 1)) {
+                Equal => {
+                    match self
+                        .dequeue_pos
+                        .compare_exchange_weak(pos, pos + 1, Relaxed, Relaxed)
+                    {
+                        Ok(_old_pos) => unsafe {
+                            let value = (*node.get()).value.take();
+                            (*node.get()).sequence.store(pos + mask + 1, Release);
+                            return value;
+                        },
+                        Err(changed_old_pos) => pos = changed_old_pos,
+                    }
                 }
-            } else if diff < 0 {
-                return None;
-            } else {
-                pos = self.dequeue_pos.load(Relaxed);
+                Less => {
+                    return None;
+                }
+                Greater => {
+                    pos = self.dequeue_pos.load(Relaxed);
+                }
             }
         }
     }
