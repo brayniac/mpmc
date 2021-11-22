@@ -178,12 +178,8 @@ impl<T: Send> State<T> {
         let enqueue = self.enqueue_pos.load(Relaxed);
         match dequeue.cmp(&(enqueue + 1)) {
             Equal => 0,
-            Less => {
-                enqueue - dequeue
-            }
-            Greater => {
-                dequeue - enqueue
-            }
+            Less => enqueue - dequeue,
+            Greater => dequeue - enqueue,
         }
     }
 }
