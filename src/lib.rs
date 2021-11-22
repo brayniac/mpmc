@@ -171,6 +171,16 @@ impl<T: Send> State<T> {
             }
         }
     }
+
+    fn len(&self) -> usize {
+        let dequeue = self.dequeue_pos.load(Relaxed);
+        let enqueue = self.enqueue_pos.load(Relaxed);
+        if enqueue > dequeue {
+            enqueue - dequeue
+        } else {
+            dequeue - enqueue
+        }
+    }
 }
 
 impl<T: Send> Queue<T> {
@@ -187,6 +197,14 @@ impl<T: Send> Queue<T> {
     pub fn pop(&self) -> Option<T> {
         self.state.pop()
     }
+
+    pub fn len(&self) -> usize {
+        self.state.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl<T: Send> Clone for Queue<T> {
@@ -202,6 +220,42 @@ mod tests {
     use super::Queue;
     use std::sync::mpsc::channel;
     use std::thread;
+
+    #[test]
+    fn len() {
+        // fill and drain N elements from the queue, with N: 1..=1024
+        let q = Queue::<usize>::with_capacity(1024);
+        assert_eq!(q.len(), 0);
+        for i in 1..=1024 {
+            for j in 0..i {
+                assert_eq!(q.len(), j);
+                let _ = q.push(j);
+                assert_eq!(q.len(), j + 1);
+            }
+            for j in (0..i).rev() {
+                assert_eq!(q.len(), j + 1);
+                let _ = q.pop();
+                assert_eq!(q.len(), j);
+            }
+        }
+
+        // steps through each potential wrap-around by filling to N - 1 and
+        // draining each time
+        let q = Queue::<usize>::with_capacity(1024);
+        assert_eq!(q.len(), 0);
+        for _ in 1..=1024 {
+            for j in 0..1023 {
+                assert_eq!(q.len(), j);
+                let _ = q.push(j);
+                assert_eq!(q.len(), j + 1);
+            }
+            for j in (0..1023).rev() {
+                assert_eq!(q.len(), j + 1);
+                let _ = q.pop();
+                assert_eq!(q.len(), j);
+            }
+        }
+    }
 
     #[test]
     fn test() {
