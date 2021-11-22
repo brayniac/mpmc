@@ -223,6 +223,7 @@ mod tests {
 
     #[test]
     fn len() {
+        // fill and drain N elements from the queue, with N: 1..=1024
         let q = Queue::<usize>::with_capacity(1024);
         assert_eq!(q.len(), 0);
         for i in 1..=1024 {
@@ -232,6 +233,23 @@ mod tests {
                 assert_eq!(q.len(), j + 1);
             }
             for j in (0..i).rev() {
+                assert_eq!(q.len(), j + 1);
+                let _ = q.pop();
+                assert_eq!(q.len(), j);
+            }
+        }
+
+        // steps through each potential wrap-around by filling to N - 1 and
+        // draining each time
+        let q = Queue::<usize>::with_capacity(1024);
+        assert_eq!(q.len(), 0);
+        for _ in 1..=1024 {
+            for j in 0..1023 {
+                assert_eq!(q.len(), j);
+                let _ = q.push(j);
+                assert_eq!(q.len(), j + 1);
+            }
+            for j in (0..1023).rev() {
                 assert_eq!(q.len(), j + 1);
                 let _ = q.pop();
                 assert_eq!(q.len(), j);
