@@ -173,13 +173,12 @@ impl<T: Send> State<T> {
     }
 
     fn len(&self) -> usize {
-        // let mask = self.mask;
         let dequeue = self.dequeue_pos.load(Relaxed);
         let enqueue = self.enqueue_pos.load(Relaxed);
-        match dequeue.cmp(&(enqueue + 1)) {
-            Equal => 0,
-            Less => enqueue - dequeue,
-            Greater => dequeue - enqueue,
+        if enqueue > dequeue {
+            enqueue - dequeue
+        } else {
+            dequeue - enqueue
         }
     }
 }
@@ -224,9 +223,9 @@ mod tests {
 
     #[test]
     fn len() {
-        let q = Queue::<usize>::with_capacity(3);
+        let q = Queue::<usize>::with_capacity(1024);
         assert_eq!(q.len(), 0);
-        for i in 1..=3 {
+        for i in 1..=1024 {
             for j in 0..i {
                 assert_eq!(q.len(), j);
                 let _ = q.push(j);
